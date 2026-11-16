@@ -1,0 +1,38 @@
+# secrets & local config
+.env
+*.pem
+*.key
+kubeconfig
+*.kubeconfig
+
+# node / python / java
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+target/
+*.jar.original
+
+# terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl.bak
+crash.log
+
+# ansible
+*.retry
+ansible/inventory/*.cache
+
+# logs & os noise
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# local-only study material — stays on this machine, not part of the delivery
+docs/
+scripts/
+*.pdf

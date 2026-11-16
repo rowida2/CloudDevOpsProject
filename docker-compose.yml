@@ -1,0 +1,89 @@
+name: ivolve
+
+# Local development stack for the iVolve microservices app.
+# Only the frontend is published to the host; every other service
+# is reachable only inside the compose network (same idea as ClusterIP in k8s).
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ivolve-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ivolve}
+      MYSQL_USER: ${MYSQL_USER:-ibrahim}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pass@123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    networks:
+      - ivolve-net
+
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: ivolve-auth
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: ${MYSQL_USER:-ibrahim}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-pass@123}
+      DB_NAME: ${MYSQL_DATABASE:-ivolve}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - ivolve-net
+
+  roadmap-service:
+    build:
+      context: ./roadmap-service
+    container_name: ivolve-roadmap
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/roadmap"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - ivolve-net
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ivolve-frontend
+    restart: unless-stopped
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:5000
+      ROADMAP_SERVICE_URL: http://roadmap-service:8080
+      SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-change-me}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      auth-service:
+        condition: service_started
+      roadmap-service:
+        condition: service_started
+    networks:
+      - ivolve-net
+
+volumes:
+  mysql-data:
+
+networks:
+  ivolve-net:
+    driver: bridge
