@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Single entry point for the whole namespace:
+#   kubectl apply -k k8s/
+#
+# secret.yaml is deliberately NOT listed here: it holds real credentials and is
+# git-ignored. Create and apply it separately, once:
+#   cp k8s/secret.example.yaml k8s/secret.yaml   # then fill in real values
+#   kubectl apply -f k8s/secret.yaml
+#
+# kind/kind-config.yaml is also not here — it is cluster setup, not a manifest
+# (the kind: Cluster object does not exist inside Kubernetes itself).
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - storageclass.yaml
+  - mysql-service.yaml
+  - mysql-statefulset.yaml
+  - auth-deployment.yaml
+  - roadmap-deployment.yaml
+  - frontend-deployment.yaml
+  - ingress.yaml

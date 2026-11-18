@@ -4,6 +4,7 @@
 *.key
 kubeconfig
 *.kubeconfig
+k8s/secret.yaml
 
 # node / python / java
 node_modules/
