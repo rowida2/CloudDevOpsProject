@@ -3,6 +3,14 @@ terraform {
   required_providers {
     aws = { source = "hashicorp/aws", version = "~> 5.0" }
   }
+
+  backend "s3" {
+    bucket         = "ivolve-tfstate-CHANGE-ME"
+    key            = "cloud-devops/terraform.tfstate"
+    region         = "eu-central-1"
+    dynamodb_table = "ivolve-tf-lock"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -35,17 +43,12 @@ module "server" {
   allowed_ssh_cidr = var.allowed_ssh_cidr
 }
 
-terraform {
-  required_version = ">= 1.5"
-  required_providers {
-    aws = { source = "hashicorp/aws", version = "~> 5.0" }
-  }
 
-  backend "s3" {
-    bucket         = "ivolve-tfstate-CHANGE-ME"
-    key            = "cloud-devops/terraform.tfstate"
-    region         = "eu-central-1"
-    dynamodb_table = "ivolve-tf-lock"
-    encrypt        = true
-  }
+
+module "eks" {
+  source             = "./modules/eks"
+  project_name       = var.project_name
+  cluster_name       = "${var.project_name}-eks"
+  private_subnet_ids = module.network.private_subnet_ids
+  public_subnet_ids  = module.network.public_subnet_ids
 }
