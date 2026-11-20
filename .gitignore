@@ -34,6 +34,7 @@ Thumbs.db
 .idea/
 
 # local-only study material — stays on this machine, not part of the delivery
-docs/
+docs/*
+!docs/PROJECT.md
 scripts/
 *.pdf
